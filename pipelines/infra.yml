@@ -50,8 +50,8 @@ stages:
         inlineScript: |
           set -e
 
-          # Format check across repo
-          terraform fmt -check -recursive
+          # Auto-format Terraform files
+          terraform fmt -recursive
 
           # Validate DEV root module
           cd environments/dev

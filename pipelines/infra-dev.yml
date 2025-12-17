@@ -104,7 +104,7 @@ stages:
 
           terraform plan \
             -var="environment=dev" \
-            -var="location=eastus" \
+            -var="location=westus2" \
             -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD_DEV" \
             -out tfplan
 
@@ -141,6 +141,6 @@ stages:
 
           terraform apply -auto-approve \
             -var="environment=dev" \
-            -var="location=eastus" \
+            -var="location=westus2" \
             -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD_DEV"
 

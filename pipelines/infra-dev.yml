@@ -15,14 +15,26 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  ENVIRONMENT: "dev"
-  TF_WORKING_DIR: "environments/dev"
+- group: moath-webapp-dev   # 👈 THIS LINKS THE VARIABLE GROUP
 
-  # Terraform state backend (MOATH NAMING)
-  TFSTATE_RESOURCE_GROUP: "rg-tfstate-moath"
-  TFSTATE_STORAGE_ACCOUNT: "tfstatemoath001"
-  TFSTATE_CONTAINER: "tfstate"
-  TFSTATE_KEY: "dev/terraform.tfstate"
+- name: ENVIRONMENT
+  value: "dev"
+
+- name: TF_WORKING_DIR
+  value: "environments/dev"
+
+- name: TFSTATE_RESOURCE_GROUP
+  value: "rg-tfstate-moath"
+
+- name: TFSTATE_STORAGE_ACCOUNT
+  value: "tfstatemoath001"
+
+- name: TFSTATE_CONTAINER
+  value: "tfstate"
+
+- name: TFSTATE_KEY
+  value: "dev/terraform.tfstate"
+
 
 stages:
 - stage: Validate

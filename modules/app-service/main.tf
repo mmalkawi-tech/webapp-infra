@@ -1,5 +1,5 @@
 resource "azurerm_service_plan" "this" {
-  name                = "asp-ui-moath-${var.environment}"
+  name                = "asp-ui-moath-${var.environment}-v2"
   resource_group_name = var.resource_group_name
   location            = var.location
 

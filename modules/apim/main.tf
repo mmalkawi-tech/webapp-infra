@@ -1,5 +1,5 @@
 resource "azurerm_api_management" "this" {
-  name                = "apim-moath-${var.environment}"
+  name                = "apim-moath-${var.environment}-v2"
   location            = var.location
   resource_group_name = var.resource_group_name
 

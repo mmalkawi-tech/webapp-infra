@@ -98,8 +98,8 @@ stages:
             -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
             -backend-config="container_name=$(TFSTATE_CONTAINER)" \
             -backend-config="key=$(TFSTATE_KEY)"
-            
-echo "Password length: ${#POSTGRES_ADMIN_PASSWORD_DEV}"
+
+          echo "Password length: ${#POSTGRES_ADMIN_PASSWORD_DEV}"
 
           terraform plan \
             -var="environment=dev" \

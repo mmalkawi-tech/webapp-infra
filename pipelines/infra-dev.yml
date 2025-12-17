@@ -90,7 +90,7 @@ stages:
           terraform plan \
             -var="environment=dev" \
             -var="location=eastus" \
-            -var="postgres_admin_password=$(POSTGRES_ADMIN_PASSWORD_DEV)" \
+            -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD_DEV" \
             -out tfplan
 
 - stage: Apply

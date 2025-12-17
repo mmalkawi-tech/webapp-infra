@@ -106,8 +106,8 @@ stages:
             -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD_DEV" \
             -out tfplan
 
-    env:
-      POSTGRES_ADMIN_PASSWORD_DEV: $(POSTGRES_ADMIN_PASSWORD_DEV)
+  env:
+    POSTGRES_ADMIN_PASSWORD_DEV: $(POSTGRES_ADMIN_PASSWORD_DEV)
 
 - stage: Apply
   displayName: "Terraform Apply (Dev)"
@@ -139,5 +139,5 @@ stages:
             -backend-config="key=$(TFSTATE_KEY)"
 
           terraform apply -auto-approve tfplan
-    env:
-      POSTGRES_ADMIN_PASSWORD_DEV: $(POSTGRES_ADMIN_PASSWORD_DEV)
+  env:
+    POSTGRES_ADMIN_PASSWORD_DEV: $(POSTGRES_ADMIN_PASSWORD_DEV)

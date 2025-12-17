@@ -32,6 +32,11 @@ stages:
     steps:
     - checkout: self
 
+    - task: TerraformInstaller@1
+      displayName: "Install Terraform"
+      inputs:
+        terraformVersion: "latest"
+
     - task: AzureCLI@2
       displayName: "Terraform validate"
       inputs:
@@ -60,6 +65,11 @@ stages:
   - job: Plan
     steps:
     - checkout: self
+
+    - task: TerraformInstaller@1
+      displayName: "Install Terraform"
+      inputs:
+        terraformVersion: "latest"
 
     - task: AzureCLI@2
       displayName: "Terraform plan"
@@ -90,6 +100,11 @@ stages:
   - job: Apply
     steps:
     - checkout: self
+
+    - task: TerraformInstaller@1
+      displayName: "Install Terraform"
+      inputs:
+        terraformVersion: "latest"
 
     - task: AzureCLI@2
       displayName: "Terraform apply"

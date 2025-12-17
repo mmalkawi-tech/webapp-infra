@@ -35,7 +35,7 @@ stages:
     - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
       displayName: "Install Terraform"
       inputs:
-      terraformVersion: "latest"
+        terraformVersion: "latest"
 
     - task: AzureCLI@2
       displayName: "Terraform validate"

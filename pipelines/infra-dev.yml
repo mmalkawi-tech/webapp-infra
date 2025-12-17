@@ -15,8 +15,6 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-- group: moath-webapp-dev   # 👈 THIS LINKS THE VARIABLE GROUP
-
 - name: ENVIRONMENT
   value: "dev"
 
@@ -34,6 +32,7 @@ variables:
 
 - name: TFSTATE_KEY
   value: "dev/terraform.tfstate"
+
 
 
 stages:

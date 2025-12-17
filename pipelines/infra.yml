@@ -49,9 +49,15 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           set -e
+
+          # Format check across repo
           terraform fmt -check -recursive
+
+          # Validate DEV root module
+          cd environments/dev
           terraform init -backend=false
           terraform validate
+
 
 # =====================================================
 # DEV

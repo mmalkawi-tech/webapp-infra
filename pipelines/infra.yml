@@ -15,32 +15,23 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-# =========================
-# GLOBAL VARIABLES
-# =========================
 variables:
-- name: LOCATION
-  value: westus2
+  LOCATION: westus2
 
-- name: TFSTATE_RESOURCE_GROUP
-  value: rg-tfstate-moath
+  TFSTATE_RESOURCE_GROUP: rg-tfstate-moath
+  TFSTATE_STORAGE_ACCOUNT: tfstatemoath001
+  TFSTATE_CONTAINER: tfstate
 
-- name: TFSTATE_STORAGE_ACCOUNT
-  value: tfstatemoath001
+# =====================================================
+# STAGES (MUST APPEAR ONLY ONCE)
+# =====================================================
+stages:
 
-- name: TFSTATE_CONTAINER
-  value: tfstate
-
-# =========================
-# STAGES
-# =========================
-
-# -------- DEV --------
+# ================= DEV =================
 - stage: Dev
   displayName: "Deploy DEV"
   jobs:
   - deployment: Dev
-    displayName: "Terraform DEV"
     environment: dev
     strategy:
       runOnce:
@@ -49,14 +40,13 @@ variables:
           - checkout: self
 
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-            displayName: Install Terraform
             inputs:
               terraformVersion: latest
 
           - task: AzureCLI@2
-            displayName: Terraform Apply DEV
+            displayName: Terraform Apply (DEV)
             env:
-              POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD_DEV)
+              POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
             inputs:
               azureSubscription: moath-sp-new
               scriptType: bash
@@ -76,13 +66,12 @@ variables:
                   -var="location=$(LOCATION)" \
                   -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD"
 
-# -------- QA --------
+# ================= QA =================
 - stage: QA
   displayName: "Deploy QA"
   dependsOn: Dev
   jobs:
   - deployment: QA
-    displayName: "Terraform QA"
     environment: qa
     strategy:
       runOnce:
@@ -91,14 +80,13 @@ variables:
           - checkout: self
 
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-            displayName: Install Terraform
             inputs:
               terraformVersion: latest
 
           - task: AzureCLI@2
-            displayName: Terraform Apply QA
+            displayName: Terraform Apply (QA)
             env:
-              POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD_QA)
+              POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
             inputs:
               azureSubscription: moath-sp-new
               scriptType: bash
@@ -118,13 +106,12 @@ variables:
                   -var="location=$(LOCATION)" \
                   -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD"
 
-# -------- PROD --------
+# ================= PROD =================
 - stage: Prod
   displayName: "Deploy PROD"
   dependsOn: QA
   jobs:
   - deployment: Prod
-    displayName: "Terraform PROD"
     environment: prod
     strategy:
       runOnce:
@@ -133,14 +120,13 @@ variables:
           - checkout: self
 
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-            displayName: Install Terraform
             inputs:
               terraformVersion: latest
 
           - task: AzureCLI@2
-            displayName: Terraform Apply PROD
+            displayName: Terraform Apply (PROD)
             env:
-              POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD_PROD)
+              POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
             inputs:
               azureSubscription: moath-sp-new
               scriptType: bash

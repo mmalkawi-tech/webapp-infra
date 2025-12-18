@@ -20,6 +20,9 @@ resource "azurerm_kubernetes_cluster" "this" {
     network_plugin = "azure"
   }
 
+  # 👇 THIS is the important line
+  acr_id = var.acr_id
+
   tags = {
     owner       = "moath"
     environment = var.environment

@@ -18,3 +18,7 @@ variable "kubernetes_version" {
   type        = string
   default     = null
 }
+
+variable "acr_id" {
+  type = string
+}

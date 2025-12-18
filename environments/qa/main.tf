@@ -16,13 +16,15 @@ module "postgres" {
   database_name  = "webappdb-moath-${var.environment}"
 }
 
-
 module "aks" {
   source              = "../../modules/aks"
   environment         = var.environment
   location            = var.location
   resource_group_name = module.resource_group.name
+
+  acr_id = data.terraform_remote_state.shared.outputs.acr_id
 }
+
 
 
 module "app_service" {
@@ -43,11 +45,3 @@ module "apim" {
   publisher_email = "moath@example.com"
 }
 
-module "aks" {
-  source              = "../../modules/aks"
-  environment         = var.environment
-  location            = var.location
-  resource_group_name = module.resource_group.name
-
-  acr_id = data.terraform_remote_state.shared.outputs.acr_id
-}

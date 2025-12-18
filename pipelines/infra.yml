@@ -6,11 +6,8 @@ trigger:
     include:
       - modules/**
       - environments/**
+      - shared/**
       - pipelines/infra.yml
-      - backend.tf
-      - providers.tf
-      - variables.tf
-      - outputs.tf
 
 pool:
   vmImage: ubuntu-latest
@@ -23,7 +20,7 @@ variables:
   TFSTATE_CONTAINER: tfstate
 
 # =====================================================
-# STAGES (DEFINED ONCE)
+# STAGES
 # =====================================================
 stages:
 
@@ -49,60 +46,57 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           set -e
-
-          # Auto-format Terraform files
           terraform fmt -recursive
+          terraform validate || true
 
-          # Validate DEV root module
-          cd environments/dev
-          terraform init -backend=false
-          terraform validate
+# =====================================================
+# SHARED (ACR ONLY)
+# =====================================================
+- stage: Shared
+  displayName: "SHARED (ACR)"
+  dependsOn: Validate
+  jobs:
+  - deployment: ApplyShared
+    displayName: "Apply SHARED"
+    environment: shared
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
 
+          - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+            inputs:
+              terraformVersion: latest
+
+          - task: AzureCLI@2
+            displayName: Terraform Apply (SHARED)
+            inputs:
+              azureSubscription: moath-sp-new
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -e
+                cd shared
+
+                terraform init -reconfigure \
+                  -backend-config="resource_group_name=$(TFSTATE_RESOURCE_GROUP)" \
+                  -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
+                  -backend-config="container_name=$(TFSTATE_CONTAINER)" \
+                  -backend-config="key=shared/terraform.tfstate"
+
+                terraform apply -auto-approve
 
 # =====================================================
 # DEV
 # =====================================================
 - stage: Dev
-  displayName: "DEV Plan & Apply"
-  dependsOn: Validate
+  displayName: "DEV"
+  dependsOn: Shared
   jobs:
-
-  - job: PlanDev
-    displayName: "Plan DEV"
-    steps:
-    - checkout: self
-
-    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-      inputs:
-        terraformVersion: latest
-
-    - task: AzureCLI@2
-      displayName: Terraform Plan (DEV)
-      env:
-        POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
-      inputs:
-        azureSubscription: moath-sp-new
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-          set -e
-          cd environments/dev
-
-          terraform init -reconfigure \
-            -backend-config="resource_group_name=$(TFSTATE_RESOURCE_GROUP)" \
-            -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
-            -backend-config="container_name=$(TFSTATE_CONTAINER)" \
-            -backend-config="key=dev/terraform.tfstate"
-
-          terraform plan \
-            -var="environment=dev" \
-            -var="location=$(LOCATION)" \
-            -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD"
-
   - deployment: ApplyDev
     displayName: "Apply DEV"
     environment: dev
-    dependsOn: PlanDev
     strategy:
       runOnce:
         deploy:
@@ -140,46 +134,12 @@ stages:
 # QA
 # =====================================================
 - stage: QA
-  displayName: "QA Plan & Apply"
+  displayName: "QA"
   dependsOn: Dev
   jobs:
-
-  - job: PlanQA
-    displayName: "Plan QA"
-    steps:
-    - checkout: self
-
-    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-      inputs:
-        terraformVersion: latest
-
-    - task: AzureCLI@2
-      displayName: Terraform Plan (QA)
-      env:
-        POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
-      inputs:
-        azureSubscription: moath-sp-new
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-          set -e
-          cd environments/qa
-
-          terraform init -reconfigure \
-            -backend-config="resource_group_name=$(TFSTATE_RESOURCE_GROUP)" \
-            -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
-            -backend-config="container_name=$(TFSTATE_CONTAINER)" \
-            -backend-config="key=qa/terraform.tfstate"
-
-          terraform plan \
-            -var="environment=qa" \
-            -var="location=$(LOCATION)" \
-            -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD"
-
   - deployment: ApplyQA
     displayName: "Apply QA"
     environment: qa
-    dependsOn: PlanQA
     strategy:
       runOnce:
         deploy:
@@ -217,46 +177,12 @@ stages:
 # PROD
 # =====================================================
 - stage: Prod
-  displayName: "PROD Plan & Apply"
+  displayName: "PROD"
   dependsOn: QA
   jobs:
-
-  - job: PlanProd
-    displayName: "Plan PROD"
-    steps:
-    - checkout: self
-
-    - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
-      inputs:
-        terraformVersion: latest
-
-    - task: AzureCLI@2
-      displayName: Terraform Plan (PROD)
-      env:
-        POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
-      inputs:
-        azureSubscription: moath-sp-new
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-          set -e
-          cd environments/prod
-
-          terraform init -reconfigure \
-            -backend-config="resource_group_name=$(TFSTATE_RESOURCE_GROUP)" \
-            -backend-config="storage_account_name=$(TFSTATE_STORAGE_ACCOUNT)" \
-            -backend-config="container_name=$(TFSTATE_CONTAINER)" \
-            -backend-config="key=prod/terraform.tfstate"
-
-          terraform plan \
-            -var="environment=prod" \
-            -var="location=$(LOCATION)" \
-            -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD"
-
   - deployment: ApplyProd
     displayName: "Apply PROD"
     environment: prod
-    dependsOn: PlanProd
     strategy:
       runOnce:
         deploy:

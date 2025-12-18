@@ -20,11 +20,15 @@ resource "azurerm_kubernetes_cluster" "this" {
     network_plugin = "azure"
   }
 
-  # 👇 THIS is the important line
-  acr_id = var.acr_id
 
   tags = {
     owner       = "moath"
     environment = var.environment
   }
+}
+
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
 }

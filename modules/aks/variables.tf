@@ -20,5 +20,7 @@ variable "kubernetes_version" {
 }
 
 variable "acr_id" {
-  type = string
+  type        = string
+  description = "ACR ID for AKS to pull images"
 }
+

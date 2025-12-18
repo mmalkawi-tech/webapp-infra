@@ -1,9 +1,9 @@
 output "acr_id" {
-  value = module.acr.acr_id
+  value = module.acr.id
 }
 
 output "acr_name" {
-  value = module.acr.acr_name
+  value = module.acr.name
 }
 
 output "acr_login_server" {

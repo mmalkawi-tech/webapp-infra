@@ -12,23 +12,14 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-# =====================================================
-# GLOBAL VARIABLES
-# =====================================================
 variables:
   LOCATION: westus2
-
   TFSTATE_RESOURCE_GROUP: rg-tfstate-moath
   TFSTATE_STORAGE_ACCOUNT: tfstatemoath001
   TFSTATE_CONTAINER: tfstate
 
-# =====================================================
-# STAGES
-# =====================================================
+stages:
 
-# =====================================================
-# VALIDATE (NO BACKEND ACCESS)
-# =====================================================
 - stage: Validate
   displayName: "Terraform Validate"
   jobs:
@@ -52,9 +43,6 @@ variables:
           terraform init -backend=false
           terraform validate
 
-# =====================================================
-# SHARED (ACR ONLY)
-# =====================================================
 - stage: Shared
   displayName: "SHARED (ACR)"
   dependsOn: Validate
@@ -73,7 +61,6 @@ variables:
             inputs:
               terraformVersion: latest
 
-          # 🔑 ENSURE BACKEND CONTAINER EXISTS (ONCE)
           - task: AzureCLI@2
             displayName: "Ensure Terraform backend container"
             inputs:
@@ -104,9 +91,6 @@ variables:
 
                 terraform apply -auto-approve
 
-# =====================================================
-# DEV
-# =====================================================
 - stage: Dev
   displayName: "DEV"
   dependsOn: Shared
@@ -148,9 +132,6 @@ variables:
                   -var="location=$(LOCATION)" \
                   -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD"
 
-# =====================================================
-# QA
-# =====================================================
 - stage: QA
   displayName: "QA"
   dependsOn: Dev
@@ -192,9 +173,6 @@ variables:
                   -var="location=$(LOCATION)" \
                   -var="postgres_admin_password=$POSTGRES_ADMIN_PASSWORD"
 
-# =====================================================
-# PROD
-# =====================================================
 - stage: Prod
   displayName: "PROD"
   dependsOn: QA

@@ -12,6 +12,9 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+# =====================================================
+# GLOBAL VARIABLES
+# =====================================================
 variables:
   LOCATION: westus2
 
@@ -22,32 +25,32 @@ variables:
 # =====================================================
 # STAGES
 # =====================================================
-stages:
 
 # =====================================================
-# VALIDATE (ONCE)
+# VALIDATE (NO BACKEND ACCESS)
 # =====================================================
 - stage: Validate
   displayName: "Terraform Validate"
   jobs:
   - job: Validate
+    displayName: "Validate Terraform Code"
     steps:
     - checkout: self
+      clean: true
 
     - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
       inputs:
         terraformVersion: latest
 
-    - task: AzureCLI@2
-      displayName: Terraform Validate
+    - task: Bash@3
+      displayName: "Terraform Format & Validate"
       inputs:
-        azureSubscription: moath-sp-new
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
+        targetType: inline
+        script: |
           set -e
           terraform fmt -recursive
-          terraform validate || true
+          terraform init -backend=false
+          terraform validate
 
 # =====================================================
 # SHARED (ACR ONLY)
@@ -57,20 +60,34 @@ stages:
   dependsOn: Validate
   jobs:
   - deployment: ApplyShared
-    displayName: "Apply SHARED"
+    displayName: "Apply SHARED Infrastructure"
     environment: shared
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+            clean: true
 
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
             inputs:
               terraformVersion: latest
 
+          # 🔑 ENSURE BACKEND CONTAINER EXISTS (ONCE)
           - task: AzureCLI@2
-            displayName: Terraform Apply (SHARED)
+            displayName: "Ensure Terraform backend container"
+            inputs:
+              azureSubscription: moath-sp-new
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az storage container create \
+                  --name $(TFSTATE_CONTAINER) \
+                  --account-name $(TFSTATE_STORAGE_ACCOUNT) \
+                  --auth-mode login
+
+          - task: AzureCLI@2
+            displayName: "Terraform Apply (SHARED)"
             inputs:
               azureSubscription: moath-sp-new
               scriptType: bash
@@ -95,20 +112,21 @@ stages:
   dependsOn: Shared
   jobs:
   - deployment: ApplyDev
-    displayName: "Apply DEV"
+    displayName: "Apply DEV Infrastructure"
     environment: dev
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+            clean: true
 
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
             inputs:
               terraformVersion: latest
 
           - task: AzureCLI@2
-            displayName: Terraform Apply (DEV)
+            displayName: "Terraform Apply (DEV)"
             env:
               POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
             inputs:
@@ -138,20 +156,21 @@ stages:
   dependsOn: Dev
   jobs:
   - deployment: ApplyQA
-    displayName: "Apply QA"
+    displayName: "Apply QA Infrastructure"
     environment: qa
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+            clean: true
 
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
             inputs:
               terraformVersion: latest
 
           - task: AzureCLI@2
-            displayName: Terraform Apply (QA)
+            displayName: "Terraform Apply (QA)"
             env:
               POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
             inputs:
@@ -181,20 +200,21 @@ stages:
   dependsOn: QA
   jobs:
   - deployment: ApplyProd
-    displayName: "Apply PROD"
+    displayName: "Apply PROD Infrastructure"
     environment: prod
     strategy:
       runOnce:
         deploy:
           steps:
           - checkout: self
+            clean: true
 
           - task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
             inputs:
               terraformVersion: latest
 
           - task: AzureCLI@2
-            displayName: Terraform Apply (PROD)
+            displayName: "Terraform Apply (PROD)"
             env:
               POSTGRES_ADMIN_PASSWORD: $(POSTGRES_ADMIN_PASSWORD)
             inputs:

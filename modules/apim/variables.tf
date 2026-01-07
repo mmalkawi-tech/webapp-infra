@@ -22,3 +22,8 @@ variable "publisher_email" {
   description = "APIM publisher email"
   type        = string
 }
+
+variable "aks_ingress_url" {
+  description = "AKS Ingress external URL (e.g., http://20.3.58.115)"
+  type        = string
+}

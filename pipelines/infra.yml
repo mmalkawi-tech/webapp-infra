@@ -43,6 +43,10 @@ stages:
           terraform init -backend=false
           terraform validate
 
+# ==============================================
+#  SHARED - ENSURE BACKEND EXISTS HERE
+# ==============================================
+
 - stage: Shared
   displayName: "SHARED (ACR)"
   dependsOn: Validate
@@ -62,15 +66,37 @@ stages:
               terraformVersion: latest
 
           - task: AzureCLI@2
-            displayName: "Ensure Terraform backend container"
+            displayName: "Ensure Terraform backend RG + Storage + Container"
             inputs:
               azureSubscription: moath-sp-new
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
+                set -e
+
+                # -----------------------------
+                # Create RG if missing
+                # -----------------------------
+                az group create \
+                  --name $TFSTATE_RESOURCE_GROUP \
+                  --location $LOCATION
+
+                # -----------------------------
+                # Create storage account if missing
+                # -----------------------------
+                az storage account create \
+                  --name $TFSTATE_STORAGE_ACCOUNT \
+                  --resource-group $TFSTATE_RESOURCE_GROUP \
+                  --location $LOCATION \
+                  --sku Standard_LRS \
+                  --encryption-services blob
+
+                # -----------------------------
+                # Create Blob container if missing
+                # -----------------------------
                 az storage container create \
-                  --name $(TFSTATE_CONTAINER) \
-                  --account-name $(TFSTATE_STORAGE_ACCOUNT) \
+                  --name $TFSTATE_CONTAINER \
+                  --account-name $TFSTATE_STORAGE_ACCOUNT \
                   --auth-mode login
 
           - task: AzureCLI@2
@@ -90,6 +116,10 @@ stages:
                   -backend-config="key=shared/terraform.tfstate"
 
                 terraform apply -auto-approve
+
+# ==============================================
+# DEV / QA / PROD – unchanged
+# ==============================================
 
 - stage: Dev
   displayName: "DEV"

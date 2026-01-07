@@ -23,14 +23,15 @@ resource "azurerm_api_management_backend" "aks" {
 }
 
 resource "azurerm_api_management_api" "backend_api" {
-  name                = "backend-api-${var.environment}"
-  resource_group_name = var.resource_group_name
-  api_management_name = azurerm_api_management.this.name
-  revision            = "1"
-  display_name        = "Backend API"
-  path                = "api"
-  protocols           = ["http", "https"]
-  service_url         = var.aks_ingress_url
+  name                  = "backend-api-${var.environment}"
+  resource_group_name   = var.resource_group_name
+  api_management_name   = azurerm_api_management.this.name
+  revision              = "1"
+  display_name          = "Backend API"
+  path                  = "api"
+  protocols             = ["http", "https"]
+  service_url           = var.aks_ingress_url
+  subscription_required = false
 }
 
 resource "azurerm_api_management_api_operation" "backend_a" {

@@ -44,6 +44,6 @@ module "apim" {
 
   publisher_name  = "Moath WebApp Dev"
   publisher_email = "moath@example.com"
-  aks_ingress_url = "http://20.3.58.115"
+  aks_ingress_url = "http://172.179.42.168"
 }
 
